@@ -1,4 +1,4 @@
-const GH_TOKEN = "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";
+const GH_TOKEN = "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";
 const GH_API_URL = "https://api.github.com/graphql";
 /**
  * Welcome to Cloudflare Workers! This is your first worker.
@@ -47,6 +47,7 @@ const getGithubUsername = (request: Request) => {
 };
 
 const isResponseValid = (response: GithubPinnedRepos) => {
+  console.log(response);
   return response.data.user !== null;
 };
 
@@ -86,19 +87,25 @@ const getPinnedRepos = async (username: string) => {
     }
   }`;
 
-  const response = await fetch(GH_API_URL, {
-    method: "POST",
-    body: JSON.stringify({ query }),
-    headers: {
-      Authorization: `Bearer ${GH_TOKEN}`,
-      "User-Agent": "Github Cloudflare worker",
-    },
-  });
+  try {
+    const response = await fetch(GH_API_URL, {
+      method: "POST",
+      body: JSON.stringify({ query }),
+      headers: {
+        Authorization: `Bearer ${GH_TOKEN}`,
+        "User-Agent": "Github Cloudflare worker",
+      },
+    });
 
-  const body: GithubPinnedRepos = await response.json();
-  const isValid = isResponseValid(body);
-  if (!isValid) return [];
-  return convertResponseToPinnedRepositoryList(body);
+    const body: GithubPinnedRepos = await response.json();
+    const isValid = isResponseValid(body);
+    if (!isValid) return [];
+    return convertResponseToPinnedRepositoryList(body);
+  } catch (error) {
+    console.error("Exception occured: ", error);
+  }
+
+  return [];
 };
 
 export default {
@@ -112,8 +119,7 @@ export default {
       return new Response(
         JSON.stringify({
           error: true,
-          message:
-            "Username not found, example GET request https://gh-pinned-repos-worker.pranjal.workers.dev?username=${GH_USER_NAME}",
+          message: `Username not found, example GET request ${request.url}?username=GH_USERNAME`,
         }),
         {
           status: 500,
