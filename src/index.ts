@@ -1,4 +1,3 @@
-const GH_TOKEN = "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";
 const GH_API_URL = "https://api.github.com/graphql";
 /**
  * Welcome to Cloudflare Workers! This is your first worker.
@@ -30,6 +29,7 @@ interface GithubPinnedRepos {
 }
 
 export interface Env {
+  GH_TOKEN: string;
   // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
   // MY_KV_NAMESPACE: KVNamespace;
   //
@@ -66,7 +66,7 @@ const convertResponseToPinnedRepositoryList = (response: GithubPinnedRepos) => {
   return pinnedRepos;
 };
 
-const getPinnedRepos = async (username: string) => {
+const getPinnedRepos = async (username: string, GH_TOKEN: string) => {
   const query = `
   query { 
     user (login: "${username}") {
@@ -126,7 +126,7 @@ export default {
         }
       );
     }
-    const pinnedRepos = await getPinnedRepos(username);
+    const pinnedRepos = await getPinnedRepos(username, env?.GH_TOKEN);
     return new Response(JSON.stringify(pinnedRepos, null, 3));
   },
 };
