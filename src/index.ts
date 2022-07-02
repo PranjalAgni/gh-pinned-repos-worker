@@ -47,7 +47,7 @@ const getGithubUsername = (request: Request) => {
 };
 
 const isResponseValid = (response: GithubPinnedRepos) => {
-  console.log(response);
+  //console.log(response);
   return response.data.user !== null;
 };
 
