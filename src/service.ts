@@ -42,7 +42,7 @@ export const getPinnedRepos = async (username: string, GH_TOKEN: string) => {
     githubData.status = response.status;
     githubData.ok = response.ok;
     if (!response.ok) {
-      githubData.error = await response.text();
+      githubData.error = body;
     }
   } catch (error) {
     githubData.status = 500;
