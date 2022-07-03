@@ -1,4 +1,8 @@
-const GH_API_URL = "https://api.github.com/graphql";
+import { GH_API_URL } from "./constant";
+import { Env } from "./interface/env";
+import { GithubPinnedRepos } from "./interface/github";
+import { getPinnedRepos } from "./service";
+
 /**
  * Welcome to Cloudflare Workers! This is your first worker.
  *
@@ -9,46 +13,15 @@ const GH_API_URL = "https://api.github.com/graphql";
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-interface GithubPinnedRepos {
-  data: {
-    user: {
-      pinnedItems: {
-        nodes: {
-          name: string;
-          url: string;
-          description: string;
-          languages: {
-            nodes: {
-              name: string;
-            }[];
-          };
-        }[];
-      };
-    };
-  };
-}
-
-export interface Env {
-  GH_TOKEN: string;
-  // Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-  // MY_KV_NAMESPACE: KVNamespace;
-  //
-  // Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-  // MY_DURABLE_OBJECT: DurableObjectNamespace;
-  //
-  // Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-  // MY_BUCKET: R2Bucket;
-}
-
 const getGithubUsername = (request: Request) => {
   const url = new URL(request.url);
   const username = url.searchParams.get("username");
   return username;
 };
 
-const isResponseValid = (response: GithubPinnedRepos) => {
-  //console.log(response);
-  return response.data.user !== null;
+const isResponseValid = (response: GithubPinnedRepos | null) => {
+  console.log(response);
+  return response && response.data.user !== null;
 };
 
 const convertResponseToPinnedRepositoryList = (response: GithubPinnedRepos) => {
@@ -66,7 +39,7 @@ const convertResponseToPinnedRepositoryList = (response: GithubPinnedRepos) => {
   return pinnedRepos;
 };
 
-const getPinnedRepos = async (username: string, GH_TOKEN: string) => {
+const getPinnedRepos1 = async (username: string, GH_TOKEN: string) => {
   const query = `
   query { 
     user (login: "${username}") {
@@ -126,7 +99,21 @@ export default {
         }
       );
     }
-    const pinnedRepos = await getPinnedRepos(username, env?.GH_TOKEN);
-    return new Response(JSON.stringify(pinnedRepos, null, 3));
+    const githubData = await getPinnedRepos(username, env?.GH_TOKEN);
+    const isValid = githubData.ok && isResponseValid(githubData.body);
+    if (isValid) {
+      const pinnedRepos = convertResponseToPinnedRepositoryList(
+        githubData.body as GithubPinnedRepos
+      );
+
+      return new Response(JSON.stringify(pinnedRepos, null, 3));
+    } else {
+      return new Response(
+        JSON.stringify({
+          error: githubData.error,
+          status: githubData.status,
+        })
+      );
+    }
   },
 };
