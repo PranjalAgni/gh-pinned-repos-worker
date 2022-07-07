@@ -39,48 +39,6 @@ const convertResponseToPinnedRepositoryList = (response: GithubPinnedRepos) => {
   return pinnedRepos;
 };
 
-const getPinnedRepos1 = async (username: string, GH_TOKEN: string) => {
-  const query = `
-  query { 
-    user (login: "${username}") {
-      pinnedItems(first: 10, types: REPOSITORY) {
-        nodes {
-          ... on Repository {
-            name
-            url
-            description
-            languages(first: 5) {
-              nodes {
-                name
-              }
-            }
-          }
-        }
-      }
-    }
-  }`;
-
-  try {
-    const response = await fetch(GH_API_URL, {
-      method: "POST",
-      body: JSON.stringify({ query }),
-      headers: {
-        Authorization: `Bearer ${GH_TOKEN}`,
-        "User-Agent": "Github Cloudflare worker",
-      },
-    });
-
-    const body: GithubPinnedRepos = await response.json();
-    const isValid = isResponseValid(body);
-    if (!isValid) return [];
-    return convertResponseToPinnedRepositoryList(body);
-  } catch (error) {
-    console.error("Exception occured: ", error);
-  }
-
-  return [];
-};
-
 export default {
   async fetch(
     request: Request,
