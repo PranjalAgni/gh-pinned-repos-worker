@@ -28,7 +28,7 @@ const convertResponseToPinnedRepositoryList = (response: GithubPinnedRepos) => {
   const { pinnedItems } = response?.data?.user;
   const pinnedRepos = pinnedItems.nodes.map((node, idx) => {
     return {
-      id: String(idx),
+      id: idx.toString(),
       repo: node.name,
       url: node.url,
       description: node.description,
