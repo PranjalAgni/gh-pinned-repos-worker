@@ -1,4 +1,3 @@
-import { GH_API_URL } from "./constant";
 import { Env } from "./interface/env";
 import { GithubPinnedRepos } from "./interface/github";
 import { getPinnedRepos } from "./service";
